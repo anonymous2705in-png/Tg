@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="ta">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Telegram File Upload & Direct Link</title>
+<style>
+  * { box-sizing: border-box; margin:0; padding:0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background:#0f172a; color:#fff; display:flex; justify-content:center; align-items:center; min-height:100vh; padding:20px; }
+  .container { background:#1e293b; padding:30px; border-radius:12px; width:100%; max-width:500px; box-shadow:0 10px 25px rgba(0,0,0,0.5); }
+  h1 { text-align:center; margin-bottom:20px; font-size:24px; }
+  p { text-align:center; margin-bottom:20px; color:#cbd5e1; font-size:14px; }
+  label { display:block; margin-top:10px; margin-bottom:5px; font-weight:bold; }
+  input[type="text"], input[type="file"] { width:100%; padding:12px; border-radius:8px; border:none; margin-bottom:10px; }
+  button { width:100%; padding:12px; border-radius:8px; border:none; background:#22c55e; color:#fff; font-size:16px; cursor:pointer; transition:0.3s; }
+  button:hover { background:#16a34a; }
+  #output { margin-top:20px; text-align:center; word-wrap:break-word; }
+  a { color:#60a5fa; text-decoration:none; font-weight:bold; }
+  a:hover { text-decoration:underline; }
+  pre { background:#0f172a; padding:12px; border-radius:8px; max-height:200px; overflow-y:auto; margin-top:10px; }
+  @media(max-width:600px){ .container { padding:20px; } }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>📤 Telegram Upload & Direct Link</h1>
+  <p>எல்லா file types (image, video, audio, document) அப்லோடு செய்து direct download link பெறுங்கள்</p>
+
+  <label>Bot Token</label>
+  <input type="text" id="token" placeholder="Bot Token உள்ளிடவும்" />
+
+  <label>Channel/Group ID</label>
+  <input type="text" id="chatId" placeholder="Channel ID உள்ளிடவும்" />
+
+  <label>Select File</label>
+  <input type="file" id="fileInput" />
+
+  <button onclick="uploadFile()">🚀 Upload & Get Direct Link</button>
+
+  <div id="output"></div>
+  <pre id="jsonOut">No data yet.</pre>
+</div>
+
+<script>
+async function uploadFile() {
+  const token = document.getElementById('token').value.trim();
+  const chatId = document.getElementById('chatId').value.trim();
+  const fileInput = document.getElementById('fileInput');
+  const out = document.getElementById('output');
+  const jsonOut = document.getElementById('jsonOut');
+
+  if(!token || !chatId){ alert('Bot Token மற்றும் Channel ID உள்ளிடவும்'); return; }
+  if(!fileInput.files.length){ alert('File ஒன்றை select செய்யவும்'); return; }
+
+  const file = fileInput.files[0];
+  out.innerHTML = "⏳ File அப்லோடு செய்யப்படுகிறது...";
+  jsonOut.textContent = "";
+
+  try {
+    const formData = new FormData();
+    formData.append('chat_id', chatId);
+    // எல்லா file types-ஐ document போலவே அனுப்புவது
+    formData.append('document', file);
+
+    const res = await fetch(`https://api.telegram.org/bot${token}/sendDocument`, { method:'POST', body: formData });
+    const data = await res.json();
+    jsonOut.textContent = JSON.stringify(data, null, 2);
+
+    if(!data.ok){ out.innerHTML="❌ File அப்லோடு செய்ய முடியவில்லை. Token & Channel ID சரிபார்க்கவும்."; return; }
+
+    const fileId = data.result.document.file_id;
+
+    // File path பெற
+    const fRes = await fetch(`https://api.telegram.org/bot${token}/getFile?file_id=${fileId}`);
+    const fData = await fRes.json();
+    jsonOut.textContent += "\n\n---\nFile Info:\n" + JSON.stringify(fData,null,2);
+
+    if(!fData.ok){ out.innerHTML="❌ File info பெற முடியவில்லை."; return; }
+
+    const path = fData.result.file_path;
+    const url = `https://api.telegram.org/file/bot${token}/${path}`;
+
+    out.innerHTML = `
+      ✅ File அப்லோடு செய்யப்பட்டது: <b>${file.name}</b><br><br>
+      <a href="${url}" download target="_blank">📥 Download Directly</a><br><br>
+      <small>${url}</small>
+    `;
+
+  } catch(err) {
+    console.error(err);
+    out.innerHTML="❌ Network அல்லது CORS பிழை. Local server-ல் open செய்யவும் (VS Code Live Server பரிந்துரை).";
+  }
+}
+</script>
+
+</body>
+</html>
