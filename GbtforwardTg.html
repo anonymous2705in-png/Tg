@@ -1,0 +1,88 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Telegram Latest File Direct Link</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <style>
+    body { font-family: system-ui, Arial; background: #0f172a; color: #fff; text-align: center; padding: 30px; }
+    button { background: #22c55e; border: none; color: #fff; padding: 12px 24px; border-radius: 8px; font-size: 17px; cursor: pointer; margin: 10px; }
+    button:hover { background: #16a34a; }
+    pre { background: #1e293b; padding: 12px; text-align: left; white-space: pre-wrap; overflow: auto; border-radius: 6px; }
+    input { padding: 8px; width: 90%; margin: 5px 0; border-radius: 6px; border: none; }
+    small { color: #94a3b8; }
+    a { color: #60a5fa; font-weight: bold; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <h2>📥 Telegram Latest File Downloader</h2>
+  <p>Automatically fetch latest file from your channel and generate direct download link</p>
+
+  <label>Bot Token</label><br>
+  <input id="token" value="YOUR_BOT_TOKEN_HERE"/><br>
+  <label>Channel ID</label><br>
+  <input id="chatId" value="-1003081786583"/><br>
+  
+  <button onclick="getLatestFile()">🔍 Fetch Latest File</button>
+
+  <div id="output" style="margin-top:20px;"></div>
+  <pre id="jsonOut">No data yet.</pre>
+
+<script>
+async function getLatestFile() {
+  const token = document.getElementById('token').value.trim();
+  const chatId = document.getElementById('chatId').value.trim();
+  const out = document.getElementById('output');
+  const jsonOut = document.getElementById('jsonOut');
+
+  out.innerHTML = "⏳ Fetching latest messages...";
+  jsonOut.textContent = "";
+
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${token}/getUpdates`);
+    const data = await res.json();
+    jsonOut.textContent = JSON.stringify(data, null, 2);
+
+    if(!data.ok){ out.innerHTML="❌ Invalid bot token or no permission."; return; }
+
+    // Filter messages from the channel
+    const msgs = data.result.filter(u => u.channel_post && String(u.channel_post.chat.id) === chatId);
+
+    if(msgs.length === 0){ out.innerHTML="📭 No messages/files found in channel."; return; }
+
+    // Find latest file
+    let fileId = null, fileName = "unknown";
+    for(let i = msgs.length-1; i >= 0; i--){
+      const m = msgs[i].channel_post;
+      if(m.document){ fileId = m.document.file_id; fileName = m.document.file_name; break; }
+      if(m.video){ fileId = m.video.file_id; fileName = "video.mp4"; break; }
+      if(m.audio){ fileId = m.audio.file_id; fileName = m.audio.file_name || "audio.mp3"; break; }
+      if(m.voice){ fileId = m.voice.file_id; fileName = "voice.ogg"; break; }
+      if(m.photo){ fileId = m.photo[m.photo.length-1].file_id; fileName = "photo.jpg"; break; }
+    }
+
+    if(!fileId){ out.innerHTML="⚠️ No file found in latest messages."; return; }
+
+    // Get file info
+    const fRes = await fetch(`https://api.telegram.org/bot${token}/getFile?file_id=${fileId}`);
+    const fData = await fRes.json();
+    jsonOut.textContent += "\n\n---\nFile Info:\n"+JSON.stringify(fData,null,2);
+
+    if(!fData.ok){ out.innerHTML="❌ Error retrieving file info."; return; }
+
+    const path = fData.result.file_path;
+    const url = `https://api.telegram.org/file/bot${token}/${path}`;
+
+    out.innerHTML = `
+      ✅ Latest file found: <b>${fileName}</b><br><br>
+      <a href="${url}" download target="_blank">📥 Download Directly</a><br><br>
+      <small>${url}</small>
+    `;
+  } catch(err) {
+    console.error(err);
+    out.innerHTML="❌ Network or CORS error. Check console.";
+  }
+}
+</script>
+</body>
+</html>
