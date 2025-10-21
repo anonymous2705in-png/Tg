@@ -1,0 +1,890 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Telegram File Uploader</title>
+<style>
+  * { 
+    box-sizing: border-box; 
+    margin: 0; 
+    padding: 0; 
+  }
+  
+  body { 
+    font-family: 'Segoe UI', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); 
+    color: #f8fafc; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    min-height: 100vh; 
+    padding: 20px; 
+    line-height: 1.6;
+  }
+  
+  .container { 
+    background: rgba(30, 41, 59, 0.85); 
+    backdrop-filter: blur(10px);
+    padding: 40px; 
+    border-radius: 16px; 
+    width: 100%; 
+    max-width: 650px; 
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3); 
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .header {
+    text-align: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  h1 { 
+    font-size: 28px; 
+    font-weight: 700;
+    margin-bottom: 10px;
+    background: linear-gradient(90deg, #60a5fa, #22c55e);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  .subtitle {
+    color: #94a3b8;
+    font-size: 16px;
+    max-width: 90%;
+    margin: 0 auto;
+  }
+  
+  .form-group { 
+    margin-bottom: 24px; 
+  }
+  
+  label { 
+    display: block; 
+    margin-bottom: 8px; 
+    font-weight: 600;
+    color: #e2e8f0;
+  }
+  
+  input[type="text"], input[type="file"] { 
+    width: 100%; 
+    padding: 14px 16px; 
+    border-radius: 10px; 
+    border: 1px solid rgba(255, 255, 255, 0.1); 
+    background: rgba(15, 23, 42, 0.7);
+    color: #f8fafc;
+    font-size: 16px;
+    transition: all 0.3s ease;
+  }
+  
+  input[type="text"]:focus, input[type="file"]:focus {
+    outline: none;
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2);
+  }
+  
+  input[type="file"] {
+    padding: 12px 16px;
+    cursor: pointer;
+  }
+  
+  .file-info {
+    margin-top: 8px;
+    font-size: 14px;
+    color: #94a3b8;
+    display: none;
+  }
+  
+  button { 
+    width: 100%; 
+    padding: 16px; 
+    border-radius: 10px; 
+    border: none; 
+    background: linear-gradient(90deg, #22c55e, #16a34a); 
+    color: #fff; 
+    font-size: 16px; 
+    font-weight: 600;
+    cursor: pointer; 
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  
+  button:hover { 
+    background: linear-gradient(90deg, #16a34a, #15803d);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(34, 197, 94, 0.3);
+  }
+  
+  button:active {
+    transform: translateY(0);
+  }
+  
+  button:disabled {
+    background: #64748b;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+  
+  .output-section { 
+    margin-top: 30px; 
+    display: none;
+  }
+  
+  .result-card {
+    background: rgba(15, 23, 42, 0.7);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .result-title {
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: #e2e8f0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .result-content {
+    word-wrap: break-word;
+  }
+  
+  .preview-container {
+    margin-top: 20px;
+    text-align: center;
+  }
+  
+  video, audio, img { 
+    margin-top: 16px; 
+    max-width: 100%; 
+    border-radius: 12px; 
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  }
+  
+  .download-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(90deg, #3b82f6, #2563eb);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    margin-top: 16px;
+    transition: all 0.3s ease;
+  }
+  
+  .download-btn:hover {
+    background: linear-gradient(90deg, #2563eb, #1d4ed8);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+    text-decoration: none;
+    color: white;
+  }
+  
+  .json-section {
+    margin-top: 30px;
+  }
+  
+  pre { 
+    background: rgba(15, 23, 42, 0.7); 
+    padding: 20px; 
+    border-radius: 12px; 
+    max-height: 300px; 
+    overflow-y: auto; 
+    margin-top: 10px; 
+    font-size: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .status-message {
+    padding: 16px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    text-align: center;
+    font-weight: 500;
+    display: none;
+  }
+  
+  .status-success {
+    background: rgba(34, 197, 94, 0.2);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    color: #4ade80;
+  }
+  
+  .status-error {
+    background: rgba(239, 68, 68, 0.2);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #f87171;
+  }
+  
+  .status-info {
+    background: rgba(96, 165, 250, 0.2);
+    border: 1px solid rgba(96, 165, 250, 0.3);
+    color: #60a5fa;
+  }
+  
+  .progress-container {
+    margin: 20px 0;
+    display: none;
+  }
+  
+  .progress-bar {
+    height: 10px;
+    background: rgba(15, 23, 42, 0.7);
+    border-radius: 5px;
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+  
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #22c55e, #16a34a);
+    width: 0%;
+    transition: width 0.3s ease;
+  }
+  
+  .progress-text {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    color: #94a3b8;
+  }
+  
+  .upload-details {
+    margin-top: 20px;
+    padding: 16px;
+    background: rgba(15, 23, 42, 0.5);
+    border-radius: 10px;
+    font-size: 14px;
+    display: none;
+  }
+  
+  .upload-details div {
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+  }
+  
+  .upload-details div:last-child {
+    margin-bottom: 0;
+  }
+  
+  .link-container {
+    margin-top: 20px;
+    padding: 16px;
+    background: rgba(15, 23, 42, 0.5);
+    border-radius: 10px;
+    display: none;
+  }
+  
+  .link-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  
+  .link-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+  }
+  
+  .link-btn {
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: none;
+    background: rgba(30, 41, 59, 0.8);
+    color: #e2e8f0;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    flex: 1;
+    justify-content: center;
+  }
+  
+  .link-btn:hover {
+    background: rgba(56, 70, 94, 0.8);
+  }
+  
+  .link-btn.primary {
+    background: linear-gradient(90deg, #3b82f6, #2563eb);
+    color: white;
+  }
+  
+  .link-btn.primary:hover {
+    background: linear-gradient(90deg, #2563eb, #1d4ed8);
+  }
+  
+  .link-text {
+    word-break: break-all;
+    background: rgba(15, 23, 42, 0.7);
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #cbd5e1;
+  }
+  
+  .copy-success {
+    background: rgba(34, 197, 94, 0.2) !important;
+    color: #4ade80 !important;
+  }
+  
+  @media (max-width: 768px) {
+    .container { 
+      padding: 24px; 
+    }
+    
+    h1 {
+      font-size: 24px;
+    }
+    
+    .subtitle {
+      font-size: 14px;
+    }
+    
+    .link-actions {
+      flex-direction: column;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>Telegram File Uploader</h1>
+    <p class="subtitle">Upload any file type (image, video, audio, document) and get a direct download link with preview. Emojis and special characters in file names are automatically removed.</p>
+  </div>
+
+  <div class="form-group">
+    <label for="token">Bot Token</label>
+    <input type="text" id="token" placeholder="Enter your Bot Token" />
+  </div>
+
+  <div class="form-group">
+    <label for="chatId">Channel/Group ID</label>
+    <input type="text" id="chatId" placeholder="Enter your Channel ID" />
+  </div>
+
+  <div class="form-group">
+    <label for="fileInput">Select File</label>
+    <input type="file" id="fileInput" />
+    <div class="file-info" id="fileInfo"></div>
+  </div>
+
+  <button id="uploadBtn" onclick="uploadFile()">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+      <polyline points="17 8 12 3 7 8"></polyline>
+      <line x1="12" y1="3" x2="12" y2="15"></line>
+    </svg>
+    Upload & Get Direct Link
+  </button>
+
+  <div class="progress-container" id="progressContainer">
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+    <div class="progress-text">
+      <span id="progressPercentage">0%</span>
+      <span id="progressStatus">Starting upload...</span>
+    </div>
+  </div>
+
+  <div class="upload-details" id="uploadDetails">
+    <div>
+      <span>File Size:</span>
+      <span id="detailSize">-</span>
+    </div>
+    <div>
+      <span>Upload Speed:</span>
+      <span id="detailSpeed">-</span>
+    </div>
+    <div>
+      <span>Time Elapsed:</span>
+      <span id="detailTime">-</span>
+    </div>
+    <div>
+      <span>Estimated Time:</span>
+      <span id="detailETA">-</span>
+    </div>
+  </div>
+
+  <div class="status-message" id="statusMessage"></div>
+
+  <div class="output-section" id="outputSection">
+    <div class="result-card">
+      <div class="result-title">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+        Upload Result
+      </div>
+      <div class="result-content" id="output"></div>
+      <div class="preview-container" id="previewContainer"></div>
+      
+      <div class="link-container" id="linkContainer">
+        <div class="link-header">
+          <strong>Direct Download Link:</strong>
+          <button class="link-btn" id="copyBtn" onclick="copyLink()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            Copy Link
+          </button>
+        </div>
+        <div class="link-text" id="linkText"></div>
+        <div class="link-actions">
+          <button class="link-btn primary" onclick="openLink()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <line x1="10" y1="14" x2="21" y2="3"></line>
+            </svg>
+            Open Link
+          </button>
+          <button class="link-btn primary" onclick="downloadLink()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Download
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="json-section">
+      <div class="result-title">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="16 18 22 12 16 6"></polyline>
+          <polyline points="8 6 2 12 8 18"></polyline>
+        </svg>
+        Response Data
+      </div>
+      <pre id="jsonOut">No data yet.</pre>
+    </div>
+  </div>
+</div>
+
+<script>
+// Global variables for upload tracking
+let uploadStartTime;
+let currentFileSize = 0;
+let uploadUrl = '';
+
+// Update file info when a file is selected
+document.getElementById('fileInput').addEventListener('change', function(e) {
+  const fileInfo = document.getElementById('fileInfo');
+  if (this.files.length > 0) {
+    const file = this.files[0];
+    fileInfo.textContent = `Selected: ${file.name} (${formatFileSize(file.size)})`;
+    fileInfo.style.display = 'block';
+    currentFileSize = file.size;
+  } else {
+    fileInfo.style.display = 'none';
+    currentFileSize = 0;
+  }
+});
+
+// Format file size
+function formatFileSize(bytes) {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// Format time
+function formatTime(seconds) {
+  if (seconds < 60) return `${seconds.toFixed(1)}s`;
+  const minutes = Math.floor(seconds / 60);
+  const secs = (seconds % 60).toFixed(0);
+  return `${minutes}m ${secs}s`;
+}
+
+// Show status message
+function showStatus(message, type) {
+  const statusEl = document.getElementById('statusMessage');
+  statusEl.textContent = message;
+  statusEl.className = `status-message status-${type}`;
+  statusEl.style.display = 'block';
+}
+
+// Hide status message
+function hideStatus() {
+  document.getElementById('statusMessage').style.display = 'none';
+}
+
+// Show upload progress
+function showProgress() {
+  document.getElementById('progressContainer').style.display = 'block';
+  document.getElementById('uploadDetails').style.display = 'block';
+}
+
+// Hide upload progress
+function hideProgress() {
+  document.getElementById('progressContainer').style.display = 'none';
+  document.getElementById('uploadDetails').style.display = 'none';
+}
+
+// Update progress bar
+function updateProgress(percentage, uploadedBytes) {
+  const progressFill = document.getElementById('progressFill');
+  const progressPercentage = document.getElementById('progressPercentage');
+  const progressStatus = document.getElementById('progressStatus');
+  
+  progressFill.style.width = `${percentage}%`;
+  progressPercentage.textContent = `${percentage.toFixed(1)}%`;
+  
+  const elapsedTime = (Date.now() - uploadStartTime) / 1000;
+  const uploadSpeed = uploadedBytes / elapsedTime;
+  const remainingBytes = currentFileSize - uploadedBytes;
+  const eta = remainingBytes / uploadSpeed;
+  
+  // Update details
+  document.getElementById('detailSize').textContent = formatFileSize(currentFileSize);
+  document.getElementById('detailSpeed').textContent = `${formatFileSize(uploadSpeed)}/s`;
+  document.getElementById('detailTime').textContent = formatTime(elapsedTime);
+  document.getElementById('detailETA').textContent = formatTime(eta);
+  
+  if (percentage < 100) {
+    progressStatus.textContent = `Uploading... ${formatFileSize(uploadedBytes)} of ${formatFileSize(currentFileSize)}`;
+  } else {
+    progressStatus.textContent = 'Upload complete! Processing...';
+  }
+}
+
+// Emoji/Special character remove function
+function sanitizeFileName(name) {
+  // Allow only letters, numbers, dot, dash, underscore
+  return name.replace(/[^\w.\-]/g, '_');
+}
+
+// Copy link to clipboard with fallback
+function copyLink() {
+  const linkText = document.getElementById('linkText');
+  const copyBtn = document.getElementById('copyBtn');
+  
+  // Create a temporary textarea element
+  const textArea = document.createElement('textarea');
+  textArea.value = uploadUrl;
+  textArea.style.position = 'fixed';
+  textArea.style.left = '-999999px';
+  textArea.style.top = '-999999px';
+  document.body.appendChild(textArea);
+  textArea.focus();
+  textArea.select();
+  
+  try {
+    // Try to use the modern clipboard API first
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(uploadUrl).then(() => {
+        showCopySuccess();
+      }).catch(() => {
+        // If modern API fails, try the fallback
+        fallbackCopyText();
+      });
+    } else {
+      // Use the fallback method
+      fallbackCopyText();
+    }
+  } catch (err) {
+    // Final fallback
+    fallbackCopyText();
+  } finally {
+    // Clean up
+    document.body.removeChild(textArea);
+  }
+  
+  function fallbackCopyText() {
+    try {
+      const successful = document.execCommand('copy');
+      if (successful) {
+        showCopySuccess();
+      } else {
+        showStatus('Failed to copy link. Please copy manually.', 'error');
+      }
+    } catch (err) {
+      showStatus('Failed to copy link. Please copy manually.', 'error');
+    }
+  }
+  
+  function showCopySuccess() {
+    copyBtn.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>
+      Copied!
+    `;
+    copyBtn.classList.add('copy-success');
+    
+    showStatus('Link copied to clipboard!', 'success');
+    setTimeout(() => {
+      copyBtn.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+        </svg>
+        Copy Link
+      `;
+      copyBtn.classList.remove('copy-success');
+      hideStatus();
+    }, 2000);
+  }
+}
+
+// Open link in new tab
+function openLink() {
+  window.open(uploadUrl, '_blank');
+}
+
+// Download link
+function downloadLink() {
+  const a = document.createElement('a');
+  a.href = uploadUrl;
+  a.download = document.getElementById('fileInput').files[0].name;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+async function uploadFile() {
+  const token = document.getElementById('token').value.trim();
+  const chatId = document.getElementById('chatId').value.trim();
+  const fileInput = document.getElementById('fileInput');
+  const outputSection = document.getElementById('outputSection');
+  const out = document.getElementById('output');
+  const previewContainer = document.getElementById('previewContainer');
+  const jsonOut = document.getElementById('jsonOut');
+  const uploadBtn = document.getElementById('uploadBtn');
+  const linkContainer = document.getElementById('linkContainer');
+  const linkText = document.getElementById('linkText');
+
+  // Reset UI
+  outputSection.style.display = 'none';
+  previewContainer.innerHTML = '';
+  linkContainer.style.display = 'none';
+  hideStatus();
+
+  // Validate inputs
+  if(!token || !chatId){ 
+    showStatus('Please enter both Bot Token and Channel ID', 'error');
+    return; 
+  }
+  
+  if(!fileInput.files.length){ 
+    showStatus('Please select a file to upload', 'error');
+    return; 
+  }
+
+  let file = fileInput.files[0];
+  const safeName = sanitizeFileName(file.name);
+  
+  // Show warning if filename was changed
+  if(safeName !== file.name){
+    showStatus(`File name was sanitized: "${file.name}" → "${safeName}"`, 'info');
+    file = new File([file], safeName, { type: file.type });
+  }
+
+  // Disable upload button and show progress
+  uploadBtn.disabled = true;
+  uploadBtn.innerHTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+      <polyline points="17 8 12 3 7 8"></polyline>
+      <line x1="12" y1="3" x2="12" y2="15"></line>
+    </svg>
+    Uploading...
+  `;
+  
+  showProgress();
+  uploadStartTime = Date.now();
+  updateProgress(0, 0);
+
+  try {
+    const formData = new FormData();
+    formData.append('chat_id', chatId);
+
+    const type = file.type;
+    let apiURL = `https://api.telegram.org/bot${token}/sendDocument`; // default
+
+    if(type.startsWith('image/')){
+      formData.append('photo', file);
+      apiURL = `https://api.telegram.org/bot${token}/sendPhoto`;
+    } else if(type.startsWith('video/')){
+      formData.append('video', file);
+      apiURL = `https://api.telegram.org/bot${token}/sendVideo`;
+    } else if(type.startsWith('audio/')){
+      formData.append('audio', file);
+      apiURL = `https://api.telegram.org/bot${token}/sendAudio`;
+    } else {
+      formData.append('document', file);
+      apiURL = `https://api.telegram.org/bot${token}/sendDocument`;
+    }
+
+    // Use XMLHttpRequest to track upload progress
+    const xhr = new XMLHttpRequest();
+    
+    xhr.upload.addEventListener('progress', (e) => {
+      if (e.lengthComputable) {
+        const percentComplete = (e.loaded / e.total) * 100;
+        updateProgress(percentComplete, e.loaded);
+      }
+    });
+    
+    xhr.addEventListener('load', async () => {
+      if (xhr.status === 200) {
+        updateProgress(100, currentFileSize);
+        
+        const data = JSON.parse(xhr.responseText);
+        jsonOut.textContent = JSON.stringify(data, null, 2);
+
+        if(!data.ok){ 
+          showStatus('File upload failed. Please check your Bot Token and Channel ID.', 'error');
+          uploadBtn.disabled = false;
+          uploadBtn.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+            Upload & Get Direct Link
+          `;
+          hideProgress();
+          return; 
+        }
+
+        hideStatus();
+        showStatus('File uploaded successfully! Retrieving file info...', 'success');
+
+        let fileId;
+        if(data.result.document) fileId = data.result.document.file_id;
+        else if(data.result.video) fileId = data.result.video.file_id;
+        else if(data.result.audio) fileId = data.result.audio.file_id;
+        else if(data.result.photo) fileId = data.result.photo.slice(-1)[0].file_id;
+
+        const fRes = await fetch(`https://api.telegram.org/bot${token}/getFile?file_id=${fileId}`);
+        const fData = await fRes.json();
+        jsonOut.textContent += "\n\n---\nFile Info:\n" + JSON.stringify(fData,null,2);
+
+        if(!fData.ok){ 
+          showStatus('Failed to retrieve file information.', 'error');
+          uploadBtn.disabled = false;
+          uploadBtn.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+            Upload & Get Direct Link
+          `;
+          hideProgress();
+          return; 
+        }
+
+        const path = fData.result.file_path;
+        uploadUrl = `https://api.telegram.org/file/bot${token}/${path}`;
+
+        let preview = '';
+        if(type.startsWith('image/')){
+          preview = `<img src="${uploadUrl}" alt="Uploaded Image" />`;
+        } else if(type.startsWith('video/')){
+          preview = `<video controls><source src="${uploadUrl}" type="${type}">Your browser does not support the video tag.</video>`;
+        } else if(type.startsWith('audio/')){
+          preview = `<audio controls><source src="${uploadUrl}" type="${type}">Your browser does not support the audio tag.</audio>`;
+        }
+
+        out.innerHTML = `
+          <p><strong>File Name:</strong> ${file.name}</p>
+          <p><strong>File Size:</strong> ${formatFileSize(file.size)}</p>
+          <p><strong>File Type:</strong> ${type || 'Unknown'}</p>
+          <p><strong>Upload Time:</strong> ${formatTime((Date.now() - uploadStartTime) / 1000)}</p>
+        `;
+        
+        if (preview) {
+          previewContainer.innerHTML = preview;
+        }
+        
+        // Show the link container
+        linkText.textContent = uploadUrl;
+        linkContainer.style.display = 'block';
+
+        // Show the output section
+        outputSection.style.display = 'block';
+        hideStatus();
+        hideProgress();
+        
+        // Re-enable upload button
+        uploadBtn.disabled = false;
+        uploadBtn.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+          Upload & Get Direct Link
+        `;
+      } else {
+        throw new Error('Upload failed');
+      }
+    });
+    
+    xhr.addEventListener('error', () => {
+      showStatus('Network error during upload. Please try again.', 'error');
+      uploadBtn.disabled = false;
+      uploadBtn.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="17 8 12 3 7 8"></polyline>
+          <line x1="12" y1="3" x2="12" y2="15"></line>
+        </svg>
+        Upload & Get Direct Link
+      `;
+      hideProgress();
+    });
+    
+    xhr.open('POST', apiURL);
+    xhr.send(formData);
+
+  } catch(err) {
+    console.error(err);
+    showStatus('An unexpected error occurred. Please try again.', 'error');
+    uploadBtn.disabled = false;
+    uploadBtn.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+        <polyline points="17 8 12 3 7 8"></polyline>
+        <line x1="12" y1="3" x2="12" y2="15"></line>
+      </svg>
+      Upload & Get Direct Link
+    `;
+    hideProgress();
+  }
+}
+</script>
+
+</body>
+</html>
